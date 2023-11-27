@@ -153,7 +153,7 @@ Java.choose('com.ad2001.frida0x5.MainActivity', {
 
 Let's now run the script.
 
-<img src="images/6.png" style="zoom:25%;" />
+<img src="images/6.png" style="zoom:5%;" />
 
 
 

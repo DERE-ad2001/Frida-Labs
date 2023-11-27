@@ -9,13 +9,13 @@
 
 ## Challenge 0x8
 
-This apk is different than the challenges we did before. This time we will dealing with the libraries in the native space. The Android NDK (Native Development Kit)  allows developers to add native code, written in languages like C and C++, into Android applications. These native codes are bundled as libraries  or shared objects (.so), allowing for the optimization of  performance-critical components and providing developers with greater control over memory management. In this scenario, we will utilize Frida to perform hooking into these libraries.
+This apk is different than the challenges we did before. This time we are dealing with the libraries in the native space. The Android NDK (Native Development Kit)  allows developers to add native code, written in languages like C and C++, into Android applications. These native codes are bundled as libraries  or shared objects (.so), allowing for the optimization of  performance-critical components and providing developers with greater control over memory management. In this scenario, we will utilize Frida to perform hooking into these libraries.
 
 Let's take a look at our application.
 
 ![](images/1.png)
 
-Well we have editText, Let's input something.
+Well, we have editText, Let's input something.
 
 ![](images/2.png)
 
@@ -100,13 +100,13 @@ Navigate to the left dropdown list `functions`.
 
 ![](images/10.png)
 
-We can see our `cmpstr` compilation. Don't get confused about the name `Java_com_ad2001_frida0xa_MainActivity_stringFromJNI()` its just appended with the package name . In Java, when you declare a native method, you use the `native` keyword to indicate that the method's implementation is provided in another language, typically C or C++. The declaration of the native method in the Java class doesn't include the implementation. it just acts as a signature that tells the Java runtime that the method will be implemented in a native language. The convention for the method name includes the package name and the class name. 
+We can see our `cmpstr` compilation. Don't get confused about the name `Java_com_ad2001_frida0xa_MainActivity_stringFromJNI()` it's just appended with the package name . In Java, when you declare a native method, you use the `native` keyword to indicate that the method's implementation is provided in another language, typically C or C++. The declaration of the native method in the Java class doesn't include the implementation. it just acts as a signature that tells the Java runtime that the method will be implemented in a native language. The convention for the method name includes the package name and the class name. 
 
-Double clicking on it will give the disassembly and decompilation of the function.
+Double-clicking on it will give the disassembly and decompilation of the function.
 
 ![](images/11.png)
 
-The right panel displays the decompilation. If this is your first time reversing a native library, don't worry things get easier with practice. This time i will provide the source code for the native function for the sake of explaination.
+The right panel displays the decompilation. If this is your first time reversing a native library, don't worry things get easier with practice. This time i will provide the source code for the native function for the sake of explanation.
 
 ```c
 #include <jni.h>

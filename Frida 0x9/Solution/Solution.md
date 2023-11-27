@@ -1,9 +1,3 @@
-## Introduction
-
-Hey all, 
-
-Welcome back to our frida series. In this post, we will explore the solution for the nineth APK. All the required files are available on the GitHub page. If you are new here, please visit the  GitHub page. Before diving in, make sure you have the prerequisites below.
-
 ## Prerequisites  
 
 - Basics of Reverse Engineering using jadx.
@@ -29,7 +23,7 @@ Okay, let's try using jadx.
 
 At the start of the app, we come across the declaration of the native function. The `check_flag` function is defined in the `a0x9` library. This function takes no arguments and returns an integer. When the button is clicked, the return value from the `check_flag` method is compared with 1337. If they match, it decrypts the flag and displays it else, it prints 'Try again'. So to get the flag we should make the `check_flag` method return 1337.
 
-So why are we wasting time here ? Let's decompile the apk and analyze the `a0x9` library.
+So why are we wasting time here? Let's decompile the app and analyze the `a0x9` library.
 
 ![](C:\Users\ajind\Desktop\Frida\Frida 0x9\Images\4.png)
 

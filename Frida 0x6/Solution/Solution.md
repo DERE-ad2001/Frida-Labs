@@ -133,4 +133,4 @@ PS C:\Users\ajind> frida -U -f com.ad2001.frida0x6
 
 Now if we check our phone, the textview will have the flag.
 
-<img src="images/5.jpg" style="width:300px; height:200px; object-fit:cover;" />
+<img src="images/5.jpg" />

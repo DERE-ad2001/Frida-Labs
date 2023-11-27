@@ -52,11 +52,11 @@ frida -U -f com.ad2001.frida0x5
 
 ![](images/3.png)
 
-Well it crashed. So what's the reason for this ?
+Well, it crashed. So what's the reason for this?
 
 Creating an instance of `MainActivity` or any Android  component directly using Frida can be tricky due to Android's lifecycle  and threading rules. Android components, like `Activity`  subclasses, rely on the application context for proper functioning. In  Frida, you might lack the necessary context. Android UI components often require a specific thread with an associated `Looper`. If you're dealing with UI tasks, ensure you're on the main thread with an active `Looper`. Activities are part of the larger Android application lifecycle. Creating an instance of `MainActivity` might need the app to be in a specific state, and managing the entire lifecycle through Frida might not be straightforward. In conclusion, it's not a good idea to create an instance for the `MainActivity`.
 
-So what's the solution here ?
+So what's the solution here?
 
 When an Android application starts, the system creates an instance of the `MainActivity` (or the launcher activity specified in the AndroidManifest.xml file). The creation of the `MainActivity` instance is part of the Android application lifecycle. So we can just use frida to get the instance of `MainActivity` then call the `flag()` method to get our flag.
 
@@ -121,7 +121,7 @@ Java.choose('com.ad2001.frida0x5.MainActivity', {
 });
 ```
 
-Let's start frida and inject our script.
+Let's start Frida and inject our script.
 
 ```
  frida -U -f com.ad2001.frida0x5
@@ -129,9 +129,9 @@ Let's start frida and inject our script.
 
 ![](images/4.png)
 
-Unfortunately, it crashed. If you encounter a crash similar to this,  where the registers and their values are printed out, then you might be unlucky. This is not an issue with our script. I have encountered this multiple times, but sometimes it works. If this happens, try with another virtual device, and always use the latest version of Frida. However, I had no problems with my physical device,the script works fine for that. Anyways if you have a fix please let me know.
+Unfortunately, it crashed. If you encounter a crash similar to this,  where the registers and their values are printed out, then you might be unlucky. This is not an issue with our script. I have encountered this multiple times, but sometimes it works. If this happens, try with another virtual device, and always use the latest version of Frida. However, I had no problems with my physical device, the script works fine for that. Anyways if you have a fix please let me know.
 
-Let me show the output when i run this in my physical device.
+Let me show the output when i run this on my physical device.
 
 ![](images/5.png)
 
@@ -157,4 +157,4 @@ Let's now run the script.
 
 
 
-If we check the app again and we can see the flag in the textview.
+If we check the app again we can see the flag in the textview.

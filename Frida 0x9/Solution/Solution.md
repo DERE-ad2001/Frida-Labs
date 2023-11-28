@@ -86,7 +86,7 @@ Interceptor.attach(check_flag, {
 });
 ```
 
-Let's run this script in frida and see what happens.
+Let's run this script and see what happens.
 
 ![](Images/8.png)
 

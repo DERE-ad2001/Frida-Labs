@@ -1,7 +1,5 @@
-<p align="center">
-  <img src="https://www.canva.com/design/DAF1cy4vPl0/nkclltchlnVUuroDXITXpQ/view?utm_content=DAF1cy4vPl0" alt="my banner">
-</p>
 
+![Frida-Labs](https://github.com/DERE-ad2001/Frida-labs/assets/67110398/e5794a19-1ee7-4820-81c7-fd362f78c842)
 
 This repository contains a series of challenges designed for learning Frida for Android. These are not like hardcore Capture The Flag (CTF) applications but will help you to start with Frida and its commonly used APIs. If you are entirely new to Frida, this is the perfect repository to get started. I have organized the challenges in a way that covers everything from the basics to an intermediate level.
 

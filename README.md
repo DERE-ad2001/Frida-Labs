@@ -1,4 +1,4 @@
-![banner](https://www.canva.com/design/DAF1cy4vPl0/aKWvZdon5gNo8O7f7ZzFGw/edit?utm_content=DAF1cy4vPl0&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+![banner](https://www.canva.com/design/DAF1cy4vPl0/nkclltchlnVUuroDXITXpQ/view?utm_content=DAF1cy4vPl0&utm_campaign=designshare&utm_medium=link&utm_source=editor)
 
 This repository contains a series of challenges designed for learning Frida for Android. These are not like hardcore Capture The Flag (CTF) applications but will help you to start with Frida and its commonly used APIs. If you are entirely new to Frida, this is the perfect repository to get started. I have organized the challenges in a way that covers everything from the basics to an intermediate level.
 

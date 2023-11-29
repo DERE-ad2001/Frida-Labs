@@ -9,7 +9,7 @@ All the APKs are inside the directories, and the solutions are also provided in 
 
 If you find this series useful please share :)
 
-# Challenges overview
+# Challenges Overview
 - Challenge 0x1 : Frida setup, Hooking a method
 - Challenge 0x2 : Calling a static method
 - Challenge 0x3 : Changing the value of a variable

@@ -15,7 +15,7 @@ If you find this series useful please share :)
 - Challenge 0x3 : Changing the value of a variable
 - Challenge 0x4 : Creating a class instance
 - Challenge 0x5 : Invoking methods on an existing instance
-- Challenge 0x6 : 
+- Challenge 0x6 : Ivnvoking a method with an object argument
 
 # Further resources
 

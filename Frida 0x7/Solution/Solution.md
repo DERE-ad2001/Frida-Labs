@@ -92,7 +92,7 @@ Let's try to hook the constructor `Checker` method.
 ```javascript
 Java.perform(function (){
  
-    var a =  Java.use("com.ad2001.frida0x6.Checker");
+    var a =  Java.use("com.ad2001.frida0x7.Checker");
     a.$init.implementation = function(param){
 
 
@@ -105,14 +105,13 @@ Okay, now let's call the original constructor with the values greater than 512, 
 ```javascript
 Java.perform(function (){
  
-    var a =  Java.use("com.ad2001.frida0x6.Checker");
-   a.$init.implementation = function(param){
+    var a =  Java.use("com.ad2001.frida0x7.Checker");
+    a.$init.implementation = function(param){
 
-    this.$init(600,600);
+        this.$init(600,600);
 
-
-   }
-    });
+    }
+});
 ```
 
 Now let's start Frida with this script. As you know, the constructor will be invoked when an instance is created. In our application, an instance of the `Checker` class is created in the `onCreate` method. Therefore, we have to load this script at runtime using the `-l` option.

@@ -1,4 +1,4 @@
-## Prerequisites  
+## Prerequisites
 
 - Basics of Reverse Engineering using jadx.
 - Proficiency in reading and understanding Java code.
@@ -27,45 +27,47 @@ In this class, there's a static int variable called `code` assigned a value of 0
 Let's inspect the code in`MainActivity`.
 
 ```java
-   btn.setOnClickListener(new View.OnClickListener() { // from class: com.ad2001.frida0x3.MainActivity.1
-            @Override // android.view.View.OnClickListener
-            public void onClick(View v) {
-                if (Checker.code == 512) {
-					....
-                    ....
-                    ....
-                }
-
+btn.setOnClickListener(new View.OnClickListener() { // from class: com.ad2001.frida0x3.MainActivity.1
+    @Override // android.view.View.OnClickListener
+    public void onClick(View v) {
+        if (Checker.code == 512) {
+            ...
+            ...
+            ...
+        }
+        ...
+    }
+});
 ```
 
 When the button is clicked, it checks whether the `code` variable in the `Checker` class is equal to `512`. If this condition is met, it displays a toast with the message "You won," decrypts the flag, and sets the resulting text in the TextView. Otherwise, it will show a toast with the message "TRY AGAIN."
 
-There are two main ways to solve it. 
+There are two main ways to solve it.
 
 - Changing the value of `code` variable directly to `512` using frida.
 - Calling the `increase()` method 256 times.
 
 ## Changing the value of code variable
 
-To obtain the flag, we need to set the value of our code variable to `512`. We can easily achieve this by changing the value of this variable using Frida. 
+To obtain the flag, we need to set the value of our code variable to `512`. We can easily achieve this by changing the value of this variable using Frida.
 
-```
+```java
 public class Checker {
     static int code = 0;
 
     public static void increase() {
-       code += 2;
+        code += 2;
     }
 }
 ```
 
 Let's show you a basic template.
 
-```
+```javascript
 Java.perform(function (){
- 
-var <class_reference>= Java.use("<package_name>.<class>");
-<class_reference>.<variable>.value = <value>;
+
+    var <class_reference> = Java.use("<package_name>.<class>");
+    <class_reference>.<variable>.value = <value>;
 
 })
 ```
@@ -75,11 +77,11 @@ Let's change the value of the code variable.
 - Package name : `com.ad2001.frida0x3`
 - Class name : `Checker`
 
-```
+```javascript
 Java.perform(function (){
- 
-var a= Java.use("com.ad2001.frida0x3.Checker");  //class reference
-a.code.value = 512; 
+
+    var a = Java.use("com.ad2001.frida0x3.Checker");  // class reference
+    a.code.value = 512;
 
 })
 ```
@@ -100,7 +102,7 @@ Let's click our button again.
 
 ![](Images/6.png)
 
-And we got the flag. That was easy right? 
+And we got the flag. That was easy right?
 
 Let's try the second way to solve it.
 
@@ -114,7 +116,7 @@ Let's write the frida script.
 - Class name : `Checker`
 - Method name : `increase()`
 
-```
+```javascript
 Java.perform(function () {
     var a = Java.use("com.ad2001.frida0x3.Checker");  // class reference
 
@@ -129,7 +131,7 @@ Java.perform(function () {
 Let's close our application and open again.
 
 ```
- frida -U -f com.ad2001.frida0x3
+frida -U -f com.ad2001.frida0x3
 ```
 
 Now paste the script in the console.
@@ -144,4 +146,4 @@ Now let's click on our button. If the value of `code` is 256, then we will get t
 
 ![](Images/9.png)
 
-As expected, we got the flag. 
+As expected, we got the flag.

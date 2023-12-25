@@ -1,4 +1,4 @@
-## Prerequisites  
+## Prerequisites
 
 - Basics of Reverse Engineering using jadx.
 - Should have the capability to understand Java code.
@@ -6,7 +6,7 @@
 - Familiarity with adb.
 - Rooted device.
 
-## Frida 
+## Frida
 
 Let's start with the first thing. What's Frida ?
 
@@ -20,7 +20,7 @@ Let's start with the first thing. What's Frida ?
 
 - **Dynamic Analysis:** Unlike traditional debugging tools, Frida doesn't require access to the original source code. It can work with compiled code, making it very useful for examining closed-source applications.
 
-We will cover some of the fundamental Frida usage techniques for analyzing Android applications.  
+We will cover some of the fundamental Frida usage techniques for analyzing Android applications.
 
 ## Setup
 
@@ -134,7 +134,7 @@ Frida launched the specified application in our device. Now that the application
 
 ## Introduction to Hooking
 
-Let's start with the very basics. 
+Let's start with the very basics.
 
 What's hooking ?
 
@@ -167,15 +167,14 @@ It says `Try again`.  So let's try to decompile the application using jadx.
 Just by skimming through the Java code, we can understand that the  application takes text input from the user, converts it into an integer, and passes that integer to a method called 'check'.
 
 ```java
-  public void onClick(View view) {
-             String obj = editText.getText().toString();
-             if (TextUtils.isDigitsOnly(obj)) {
-              MainActivity.this.check(i, Integer.parseInt(obj));
-              } else
-             {
-            Toast.makeText(MainActivity.this.getApplicationContext(), "Enter a valid number !!", 1).show();
-   }
-
+public void onClick(View view) {
+    String obj = editText.getText().toString();
+    if (TextUtils.isDigitsOnly(obj)) {
+        MainActivity.this.check(i, Integer.parseInt(obj));
+    } else {
+        Toast.makeText(MainActivity.this.getApplicationContext(), "Enter a valid number !!", 1).show();
+    }
+}
 ```
 
 Along with the input number, another integer value is passed.
@@ -184,15 +183,15 @@ Along with the input number, another integer value is passed.
 
 A random value is generated from the `get_random()` function when the application starts. This value falls within the range of 0 to 100 and is stored in the variable `i`. The `get_random()` function is called when the application starts, but it will be called  only once. Therefore, the random number will not change. On each run, a different random number will be generated.
 
-Now let's see what's happening in the `check()` function. 
+Now let's see what's happening in the `check()` function.
 
-```
- void check(int i, int i2)
+```java
+void check(int i, int i2)
 ```
 
 Here `i` refers to the random number passed and `i2` refers to the parsed integer number from the input.
 
-```
+```java
 if ((i * 2) + 4 == i2)
 ```
 
@@ -216,16 +215,16 @@ Now we know how to solve this, let's try writing some frida scripts.
 Firstly let me provide you a template , then i will explain it.
 
 ```javascript
-Java.perform(function (){
- 
-var <class_reference>= Java.use("<package_name>.<class>");
-<class_reference>.<method_to_hook>.implementation = function(<args>){
+Java.perform(function() {
 
-/*
-   OUR OWN IMPLEMENTATION OF THE METHOD
-*/
- 
-}
+  var <class_reference> = Java.use("<package_name>.<class>");
+  <class_reference>.<method_to_hook>.implementation = function(<args>) {
+
+    /*
+      OUR OWN IMPLEMENTATION OF THE METHOD
+    */
+
+  }
 
 })
 ```
@@ -260,11 +259,10 @@ Next, we need to identify the class name where the method we want to hook is loc
 
 As we can see, we should get the reference to `MainActivity`.
 
-```
-Java.perform(function (){
- 
-var a= Java.use("com.ad2001.frida0x1.MainActivity");
+```javascript
+Java.perform(function() {
 
+  var a= Java.use("com.ad2001.frida0x1.MainActivity");
 
 })
 ```
@@ -272,21 +270,20 @@ var a= Java.use("com.ad2001.frida0x1.MainActivity");
 Next, we will modify the script to include our custom implementation of the method. The method to hook is `get_random`.
 
 ```java
- int get_random() {
-        return new Random().nextInt(100);
-    }
-
+int get_random() {
+    return new Random().nextInt(100);
+}
 ```
 
 ```javascript
-Java.perform(function (){
- 
-var a= Java.use("com.ad2001.frida0x1.MainActivity");
-a.get_random.implementation = function(){
-    
-console.log("This method is hooked");
+Java.perform(function() {
 
-}
+  var a= Java.use("com.ad2001.frida0x1.MainActivity");
+  a.get_random.implementation = function(){
+
+    console.log("This method is hooked");
+
+  }
 
 })
 ```
@@ -319,14 +316,14 @@ The application displays the message `Try again`. Obviously we don't know  the n
 
 The reason for this is that the `get_random()` function is executed when the app is launched. We are injecting the script after the `get_random`() has already been executed. If you look at decompilation we can understand that.
 
-So what will we do ? 
+So what will we do ?
 
 We need to inject the script at the same time as the application loads, allowing us to hook this method before it gets executed. To do this we can use the `-l` option.  Firstly let's save our script to a file.
 
 I saved my script as `script.js`. Now let's load this script using the `-l` option.
 
 ```
- frida -U -f com.ad2001.frida0x1 -l .\script.js
+frida -U -f com.ad2001.frida0x1 -l .\script.js
 ```
 
 ![](images/21.png)
@@ -334,26 +331,25 @@ I saved my script as `script.js`. Now let's load this script using the `-l` opti
 We have successfully hooked the `get_random()` method but we getting an error. It says that `get_random()` expected a return value. If we look at the implementation of `get_random()` it returns a number.
 
 ```java
- int get_random() {
-        return new Random().nextInt(100);
-    }
-
+int get_random() {
+    return new Random().nextInt(100);
+}
 ```
 
 In our script, we replaced the original implementation of the `get_random()` method with our custom one, but we did not provide a return value. This return value is assigned to the `i` variable and is used in the `check()` function. So, let's try providing a return value. You can use any value.
 
 ```javascript
-Java.perform(function (){
- 
-var a= Java.use("com.ad2001.frida0x1.MainActivity");
-a.get_random.implementation = function(){
-    
-console.log("This method is hooked");
-console.log("Returning 5")
-    
-return 5;
+Java.perform(function() {
 
-}
+  var a= Java.use("com.ad2001.frida0x1.MainActivity");
+  a.get_random.implementation = function(){
+
+    console.log("This method is hooked");
+    console.log("Returning 5")
+
+    return 5;
+
+  }
 
 })
 ```
@@ -372,7 +368,7 @@ We can see that no errors are being raised here; the method was called and retur
 
 Now, `5` will be passed to the `check()` function. Let's calculate the value so that we can satisfy the `if` check and obtain the flag.
 
-```
+```java
 if ((i * 2) + 4 == i2)
 ```
 
@@ -385,17 +381,16 @@ Great! We've obtained our flag.
 Now, let's try to retrieve the originally generated random value. To achieve this, we need to obtain the return value from the original `get_random()` function. Let's see how to do that.
 
 ```javascript
-Java.perform(function (){
- 
-var a= Java.use("com.ad2001.frida0x1.MainActivity");
-a.get_random.implementation = function(){
-    
-console.log("This method is hooked");
-var ret_val = this.get_random();
-console.log("The return value is "+ ret_val);    
+Java.perform(function() {
 
+  var a= Java.use("com.ad2001.frida0x1.MainActivity");
+  a.get_random.implementation = function(){
 
-}
+    console.log("This method is hooked");
+    var ret_val = this.get_random();
+    console.log("The return value is " + ret_val);
+
+  }
 
 })
 ```
@@ -403,18 +398,18 @@ console.log("The return value is "+ ret_val);
 What we've done here is we've hooked into the `get_random()` method. Within this hook, we've called the original `get_random()` using `this.get_random()`. The`this` keyword refers to the current object. Since this method returns our original value, we've stored it in the `ret_val` variable. But if we run this script the application will crash as the `get_random` is required to provide a return value. So we can return the original value and to bypass the check we can use the original random value stored in the `ret_val` .
 
 ```javascript
-Java.perform(function (){
- 
-var a= Java.use("com.ad2001.frida0x1.MainActivity");
-a.get_random.implementation = function(){
-    
-console.log("This method is hooked");
-var ret_val = this.get_random();
-console.log("The return value is "+ ret_val);  
-console.log("The value to bypass the check " + (ret_val * 2 + 4 ))//TO bypass the check
-return ret_val; //returning the original random value from the get_random method
+Java.perform(function() {
 
-}
+  var a = Java.use("com.ad2001.frida0x1.MainActivity");
+  a.get_random.implementation = function(){
+
+    console.log("This method is hooked");
+    var ret_val = this.get_random();
+    console.log("The return value is " + ret_val);
+    console.log("The value to bypass the check " + (ret_val * 2 + 4 )) // To bypass the check
+    return ret_val; //returning the original random value from the get_random method
+
+  }
 
 })
 ```
@@ -438,40 +433,41 @@ Wonderful, we got the flag.
 Let's try the second method that I mentioned at the beginning. We will hook into the `check()` method and capture its arguments because the arguments passed to the `check()` method contain the random number.
 
 ```java
- final int i = get_random();
+...
+    final int i = get_random();
+...
 
 void check(int i, int i2) {
-if ((i * 2) + 4 == i2) {
+    if ((i * 2) + 4 == i2) {
 
-....
-....
-....
+        ...
+        ...
+        ...
 
-}
+    }
 }
 ```
 
-If we examine the arguments for the `check` function, the first argument, `i`, represents the random number, and the second one, `i2`, corresponds to the user-entered number. Let's capture and dump both of these arguments using Frida. 
+If we examine the arguments for the `check` function, the first argument, `i`, represents the random number, and the second one, `i2`, corresponds to the user-entered number. Let's capture and dump both of these arguments using Frida.
 
 When dealing with hooking methods that have arguments, it's important to specify the expected argument types using the `overload(arg_type)` keyword. Additionally, ensure that you include these specified arguments in your implementation when hooking the method. Here our `check()` function takes two integer arguments so we can specify it like this,
 
 ```javascript
-a.check.overload(int ,int ).implementation = function(a,b){
+a.check.overload(int, int).implementation = function(a, b) {
 
-...
+  ...
 
 }
 ```
 
 ```javascript
-Java.perform(function (){
- 
-var a= Java.use("com.ad2001.frida0x1.MainActivity");
-a.check.overload('int', 'int').implementation = function(a,b){  //The function takes two arguments ;check(random,input)
-console.log("The random number is "+a);
-console.log("The user input is "+b);
-    
-}
+Java.perform(function() {
+
+  var a = Java.use("com.ad2001.frida0x1.MainActivity");
+  a.check.overload('int', 'int').implementation = function(a, b) { // The function takes two arguments - check(random, input)
+    console.log("The random number is " + a);
+    console.log("The user input is " + b);
+  }
 
 })
 ```
@@ -480,13 +476,13 @@ After obtaining these arguments, the primary objective is to ensure that the `ch
 
 ```javascript
 Java.perform(function() {
-    var a = Java.use("com.ad2001.frida0x1.MainActivity");
-    a.check.overload('int', 'int').implementation = function(a, b) {
-        // The function takes two arguments; check(random, input)
-        console.log("The random number is " + a);
-        console.log("The user input is " + b);
-        this.check(a, b); // Call the check() function with the correct arguments
-    }
+  var a = Java.use("com.ad2001.frida0x1.MainActivity");
+  a.check.overload('int', 'int').implementation = function(a, b) {
+    // The function takes two arguments; check(random, input)
+    console.log("The random number is " + a);
+    console.log("The user input is " + b);
+    this.check(a, b); // Call the check() function with the correct arguments
+  }
 });
 
 ```
@@ -505,7 +501,7 @@ Let's enter an input and click the submit button.
 
 We see that the generated random number is 16. So entering (16 * 2 + 4)  `36` will give us the flag.
 
-Before concluding this example, i want to show one more way to get the flag. 
+Before concluding this example, i want to show one more way to get the flag.
 
 We know that to obtain the flag, our input must be equal to the result of (random number * 2 + 4). So why not simply call the `check()` function with two numbers that satisfy this condition? In this way, we don't need to concern ourselves with the random number since we are providing our own input to the `check()` function.
 
@@ -513,10 +509,10 @@ Let's try that. I will provide the number `4` as our input and (4 * 2 + 4) as th
 
 ```javascript
 Java.perform(function() {
-    var a = Java.use("com.ad2001.frida0x1.MainActivity");
-    a.check.overload('int', 'int').implementation = function(a, b) {
-        this.check(4, 12); 
-    }
+  var a = Java.use("com.ad2001.frida0x1.MainActivity");
+  a.check.overload('int', 'int').implementation = function(a, b) {
+    this.check(4, 12);
+  }
 });
 
 ```
@@ -527,6 +523,6 @@ Java.perform(function() {
 
 ![](images/29.png)
 
-As we expected, we got the flag. 
+As we expected, we got the flag.
 
 These are the very fundamentals of hooking a method in Frida and dumping its arguments and return value. Frida is a very powerful tool, and we will explore some of its major features further throughout the series.

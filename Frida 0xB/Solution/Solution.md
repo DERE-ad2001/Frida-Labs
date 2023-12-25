@@ -1,11 +1,11 @@
-## Prerequisites  
+## Prerequisites
 
 - Basics of Reverse Engineering using jadx.
 - Ability to understand Java code.
 - Capability to write small JavaScript snippets.
 - Familiarity with adb.
 - Rooted device.
-- Basics of  x64/ARM64 assembly and reversing.
+- Basics of x86/ARM64 assembly and reversing.
 
 ## Challenge 0xB
 
@@ -61,42 +61,42 @@ Untick the `Eliminate unreachable code`. Click on Apply. Now let's check the dec
 
 ![](images/13.png)
 
-Even though it doesn't give us 100% accurate decompilation, it provides us with an idea. The `if(false)` part should be like `if (local_14 == 1337)`, where `local_14` is `0xdeadbeef`. Further inspecting the code, we can understand that it's decoding a string, `j~ehmWbmxezisdmogi~Q`, using the XOR operation. The key is `0x2c`. After the string is decoded, it logs the flag. 
+Even though it doesn't give us 100% accurate decompilation, it provides us with an idea. The `if(false)` part should be like `if (local_14 == 1337)`, where `local_14` is `0xdeadbeef`. Further inspecting the code, we can understand that it's decoding a string, `j~ehmWbmxezisdmogi~Q`, using the XOR operation. The key is `0x2c`. After the string is decoded, it logs the flag.
 
 So the question is how to get the flag ?
 
 The function is called when the button is clicked. But as the `if` check is never true, we won't get the flag.
 
-What if we patch these instructions so that we can bypass the check and execute the block of code that decodes and logs the flag? That would be interesting, right? We will be doing exactly that. For modifying / temporarily patching instructions we can use the `x86Writer` class for x86 architecture and `Arm64Writer` class for ARM64 architecture. 
+What if we patch these instructions so that we can bypass the check and execute the block of code that decodes and logs the flag? That would be interesting, right? We will be doing exactly that. For modifying / temporarily patching instructions we can use the `X86Writer` class for x86 architecture and `Arm64Writer` class for ARM64 architecture.
 
-As I'm using `x86` i will be using the `x86Writer`. Let's see a basic template for this.
+As I'm using `x86` i will be using the `X86Writer`. Let's see a basic template for this.
 
-```Javascript
+```javascript
 
-var writer = new x86Writer(<address_of_the_instruction);
+var writer = new X86Writer(<address_of_the_instruction>);
 
 try {
-   //Insert instructions
+  // Insert instructions
 
   // Flush the changes to memory
   writer.flush();
 
 } finally {
-  // Dispose of the Arm64Writer to free up resources
+  // Dispose of the X86Writer to free up resources
   writer.dispose();
 }
 
 ```
 
-**Instantiation of `x86Writer`:**
+**Instantiation of `X86Writer`:**
 
-- `var writer = new x86Writer(<address_of_the_instruction>);`
-- This creates an instance of the `x86Writer` class and specifies the address of the instruction we want to modify. This sets up the writer to operate on the specified memory location.
+- `var writer = new X86Writer(<address_of_the_instruction>);`
+- This creates an instance of the `X86Writer` class and specifies the address of the instruction we want to modify. This sets up the writer to operate on the specified memory location.
 
 **Inserting instructions:**
 
 - `try { /* Insert instructions here */ }`
-- Within the `try` block, we can insert the x86 instructions that we want to modify/add. The `x86Writer` instance provides various methods for inserting various x86 instructions. We can use the documentation for this.
+- Within the `try` block, we can insert the x86 instructions that we want to modify/add. The `X86Writer` instance provides various methods for inserting various x86 instructions. We can use the documentation for this.
 
 **Flushing the Changes :**
 
@@ -105,19 +105,18 @@ try {
 
 **Cleanup :**
 
-- `finally { /* Dispose of the x86Writer to free up resources */ writer.dispose(); }`
-- The `finally` block is used to make sure that the `x86Writer` resources are cleaned up properly. The `dispose` method is called to release the resources associated with the `x86Writer` instance.
+- `finally { /* Dispose of the X86Writer to free up resources */ writer.dispose(); }`
+- The `finally` block is used to make sure that the `X86Writer` resources are cleaned up properly. The `dispose` method is called to release the resources associated with the `X86Writer` instance.
 
 Now we have a rough idea about the template. Next, we have to figure out want instruction to patch/modify. This requires a bit of reverse engineering basics. Consider the below three instructions.
 
-```
+```assembly
         00020e1c c7  45  f0       MOV        dword ptr [EBP  + local_14 ],0xdeadbeef
                  ef  be  ad  de
         00020e23 81  7d  f0       CMP        dword ptr [EBP  + local_14 ],0x539
                  39  05  00  00
         00020e2a 0f  85  d8       JNZ        LAB_00020f08
                  00  00  00
-
 ```
 
 First, it will load `0xdeadbeef` into `local_14`, and then it compares it with `0x539`. The `CMP` instruction sets the zero flag if both operands are the same. After this `CMP` instruction, we have a `JNZ` instruction. This instruction (Jump Not Zero) will change the execution flow to the specified address if the zero flag is not set. If the zero flag is set, it will not jump and will continue executing the next instruction.  But unfortunately in this case, as `0xdeadbeef` doesn't equal to `0x539`, zero flag won't be set and the `JNZ`	instruction will jump to the address `0x00020f08` which is the end of the function.
@@ -150,7 +149,7 @@ Let's write our script.
 
 ```javascript
 var jnz = Module.getBaseAddress("libfrida0xb.so").add(0x20e2a - 0x00010000);
-var writer = new x86Writer(jnz);
+var writer = new X86Writer(jnz);
 
 try {
 
@@ -188,7 +187,7 @@ var jnz = Module.getBaseAddress("libfrida0xb.so").add(0x20e2a - 0x00010000);
 var writer = new X86Writer(jnz);
 
 try {
-   
+
   writer.putNop()
   writer.putNop()
   writer.putNop()
@@ -226,23 +225,23 @@ Memory.protect(address, size, protection);
 
 - `address`: The starting address of the memory region to change the protection.
 - `size`: The size of the memory region in bytes.
-- `protection`: The protection attributes for the memory region. 
+- `protection`: The protection attributes for the memory region.
 
 We can use this function to make the `.text` section writable. We won't be making the entire section writable. We only need to change the permission for a tiny region so that we can insert the `NOP` instruction without crashing the application. In our case, we can provide the address of the `JNZ` function as the first argument for the `Memory.protect()` function. For the size, we can specify `0x1000`, it is more than enough as our `NOP` instructions take only 6 bytes. For the protection, we need read, write, and execute. So we can pass `rwx`.
 
 ```
-Memory.protect(adr, 0x1000, "rwx");
+Memory.protect(jnz, 0x1000, "rwx");
 ```
 
 Let's update the script for the final time.
 
 ```javascript
 var jnz = Module.getBaseAddress("libfrida0xb.so").add(0x20e2a - 0x00010000);
-Memory.protect(adr, 0x1000, "rwx");
+Memory.protect(jnz, 0x1000, "rwx");
 var writer = new X86Writer(jnz);
 
 try {
-   
+
   writer.putNop()
   writer.putNop()
   writer.putNop()
@@ -286,7 +285,7 @@ Let's use ghidra again.
 
 We can see the beautiful ARM64 disassembly. I'll remind you again, this is a Frida series, not a reverse engineering series, so I won't be explaining the disassembly. Let's just concentrate on the main part.
 
-```
+```assembly
         00115244 08  e5  14  71    subs       w8,w8,#0x539
         00115248 21  07  00  54    b.ne       LAB_0011532c
         0011524c 01  00  00  14    b          LAB_00115250
@@ -313,20 +312,21 @@ Now we need to repeat the process we did above to find the address of the `b.ne`
 So after obtaining the offset, you can find the base address by using `Module.findBaseAddress("libfrida0xb.so")` and add the offset to get the actual address of the instruction. Let's write the final script.
 
 ```javascript
-var adr = Module.findBaseAddress("libfrida0xb.so").add(0x15248);  //Addres of the b.ne instruction
+var adr = Module.findBaseAddress("libfrida0xb.so").add(0x15248);  // Addres of the b.ne instruction
 Memory.protect(adr, 0x1000, "rwx");
-var writer = new Arm64Writer(adr);  //ARM64 writer object
-var target = Module.findBaseAddress("libfrida0xb.so").add(0x1524c);  //Address of the next instruction  b  LAB_00115250
+var writer = new Arm64Writer(adr);  // ARM64 writer object
+var target = Module.findBaseAddress("libfrida0xb.so").add(0x1524c);  // Address of the next instruction  b  LAB_00115250
 
 try {
 
   writer.putBImm(target);   // Inserts the <b target> instruction in the place of b.ne instruction
+  writer.flush();
 
-  
   console.log(`Branch instruction inserted at ${adr}`);
 } finally {
 
   writer.dispose();
+
 }
 
 ```

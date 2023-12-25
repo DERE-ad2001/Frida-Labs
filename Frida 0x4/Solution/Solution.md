@@ -1,4 +1,4 @@
-## Prerequisites  
+## Prerequisites
 
 - Basics of Reverse Engineering using jadx.
 - Ability to understand Java code.
@@ -26,51 +26,49 @@ We can see a method named `get_flag`; it's a basic XOR function that decodes the
 
 Let's see how to call the `get_flag` method. As we know, this is not a static method, so first, we need to create an instance of the  class. Using that instance, we can then call the method. Below is the  corresponding Java code:
 
-```
-  Check ch = new Check();
-  String flag = ch.get_flag(1337);
+```java
+Check ch = new Check();
+String flag = ch.get_flag(1337);
 ```
 
 The function will return a string, so we  should store that in a variable.
 
 Let's see how to do this in frida.
 
-```
+```javascript
+Java.perform(function() {
 
-Java.perform(function (){
- 
-var <class_reference>= Java.use("<package_name>.<class>");
-var <class_instance> = <class_reference>.$new(); //Class Object
-<class_instance>.<method>();   //Calling the method
+  var <class_reference> = Java.use("<package_name>.<class>");
+  var <class_instance> = <class_reference>.$new(); // Class Object
+  <class_instance>.<method>(); // Calling the method
 
 })
 ```
 
-In Frida, to create an instance of a Java class, you can use the `$new()` method .This is a Frida-specific method allows you to instantiate objects of a particular class.
+In Frida, to create an instance of a Java class, you can use the `$new()` method. This is a Frida-specific method allows you to instantiate objects of a particular class.
 
 This is the template. Let's start writing the real script.
 
 - Package name : `com.ad2001.frida0x4`
-- Class name : `Check `
-- Function name :  `get_flag` 
+- Class name : `Check`
+- Function name : `get_flag`
 
-```
+```javascript
 
-Java.perform(function (){
- 
-var check =  Java.use("com.ad2001.frida0x4.Check");
+Java.perform(function() {
+
+  var check = Java.use("com.ad2001.frida0x4.Check");
 
 })
 ```
 
 Let's create this instance using `$new()` method.
 
-```
-Java.perform(function (){
- 
-var check =  Java.use("com.ad2001.frida0x4.Check");
-var check_obj  =  check.$new(); //Class Object
+```javascript
+Java.perform(function() {
 
+  var check = Java.use("com.ad2001.frida0x4.Check");
+  var check_obj = check.$new(); // Class Object
 
 })
 ```
@@ -78,12 +76,13 @@ var check_obj  =  check.$new(); //Class Object
 Now we can easily call the `get_flag` method.
 
 ```javascript
-Java.perform(function (){
- 
-var check =  Java.use("com.ad2001.frida0x4.Check");
-var check_obj  =  check.$new(); //Class Object
-var res = check_obj.get_flag(1337);   //Calling the method
-console.log("FLAG " + res);
+Java.perform(function() {
+
+  var check = Java.use("com.ad2001.frida0x4.Check");
+  var check_obj = check.$new(); // Class Object
+  var res = check_obj.get_flag(1337); // Calling the method
+  console.log("FLAG " + res);
+
 })
 ```
 

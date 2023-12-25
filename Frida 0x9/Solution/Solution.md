@@ -1,11 +1,11 @@
-## Prerequisites  
+## Prerequisites
 
 - Basics of Reverse Engineering using jadx.
 - Ability to understand Java code.
 - Capability to write small JavaScript snippets.
 - Familiarity with adb.
 - Rooted device.
-- Basics of  x64/ARM64 assembly and reversing.
+- Basics of x86/ARM64 assembly and reversing.
 
 ## Challenge 0x9
 
@@ -21,7 +21,7 @@ Okay, let's try using jadx.
 
 ![](Images/3.png)
 
-At the start of the app, we come across the declaration of the native function. The `check_flag` function is defined in the `a0x9` library. This function takes no arguments and returns an integer. When the button is clicked, the return value from the `check_flag` method is compared with 1337. If they match, it decrypts the flag and displays it else, it prints 'Try again'. So to get the flag we should make the `check_flag` method return 1337.
+At the start of the app, we come across the declaration of the native function. The `check_flag` function is defined in the `a0x9` library. This function takes no arguments and returns an integer. When the button is clicked, the return value from the `check_flag` method is compared with 1337. If they match, it decrypts the flag and displays it. Otherwise, it prints 'Try again'. So to get the flag, we should make the `check_flag` method return 1337.
 
 So why are we wasting time here? Let's decompile the app and analyze the `a0x9` library.
 
@@ -59,7 +59,7 @@ First we need the address for `check_flag` method. For this, we can use the ` Mo
 var check_flag = Module.enumerateExports("liba0x9.so")[0]['address']
 Interceptor.attach(check_flag, {
     onEnter: function (args) {
-      
+
     },
     onLeave: function (retval) {
 
@@ -76,12 +76,11 @@ Let's do that.
 var check_flag = Module.enumerateExports("liba0x9.so")[0]['address']
 Interceptor.attach(check_flag, {
     onEnter: function () {
-    
-      
+
     },
     onLeave: function (retval) {
-	console.log("Original return value :" + retval);
-	retval.replace(1337)  //changing the return value to 1337.
+        console.log("Original return value :" + retval);
+        retval.replace(1337)  // changing the return value to 1337.
     }
 });
 ```

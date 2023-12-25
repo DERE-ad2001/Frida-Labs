@@ -130,14 +130,14 @@ var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0)
 Next let's create the NativePointer object.
 
 ```javascript
-var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0) //Address of the get_flag() function
+var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0) // Address of the get_flag() function
 var get_flag_ptr = new NativePointer(adr);
 ```
 
 Now let's create the `NativeFunction` object. The first argument is `get_flag_ptr`. The second argument is the data type; here, `get_flag` is a void function, so we will pass `void`. Lastly, the `get_flag` function has two arguments, both of which are integers, so we will pass `['int', 'int']` as the third argument.
 
 ```javascript
-var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0) //Address of the get_flag() function
+var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0) // Address of the get_flag() function
 var get_flag_ptr = new NativePointer(adr);
 const get_flag = new NativeFunction(get_flag_ptr, 'void', ['int', 'int']);
 ```
@@ -161,7 +161,7 @@ if (param_1 + param_2 == 3) {
 We need the sum of our arguments to equal `3` to pass the `if` check. So, we can pass `1` and `2` as the arguments and call the method. So the final script will look like.
 
 ```javascript
-var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0) //Address of the get_flag() function
+var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0) // Address of the get_flag() function
 var get_flag_ptr = new NativePointer(adr);
 const get_flag = new NativeFunction(get_flag_ptr, 'void', ['int', 'int']);
 get_flag(1,2);

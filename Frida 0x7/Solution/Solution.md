@@ -62,6 +62,7 @@ Java.performNow(function() {
 We got the flag easily but let's do it by hooking the constructor
 
 ## Hooking the constructor
+> **Note:** This doesn't work for ARM64 devices - https://github.com/frida/frida/issues/1575
 
 It's very easy to hook the constructor. it's similar to hooking a method. Let me provide you a template.
 

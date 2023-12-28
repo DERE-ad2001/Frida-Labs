@@ -1,4 +1,4 @@
-## Prerequisites  
+## Prerequisites
 
 - Basics of Reverse Engineering using jadx.
 - Ability to understand Java code.
@@ -16,9 +16,9 @@ Just like our previous challenges, there's nothing. Let's use jadx.
 
 ![](images/2.png)
 
-We have already solved a similar one before. In this case, we have a `get_flag()`  method which is not called anywhere in the application. If we call this method, it will decrypt the flag using `AES` and sets the flag in the Textview. If we examine the `get_flag` method it only takes one argument , which is an instance of the `Checker` class. The argument is named `A`, and its type is `Checker`. 
+We have already solved a similar one before. In this case, we have a `get_flag()`  method which is not called anywhere in the application. If we call this method, it will decrypt the flag using `AES` and sets the flag in the Textview. If we examine the `get_flag` method it only takes one argument , which is an instance of the `Checker` class. The argument is named `A`, and its type is `Checker`.
 
-```
+```java
 public void get_flag(Checker A) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
     // Method body
 }
@@ -48,78 +48,76 @@ Let's start writing our frida script.
 
 First let's create the instance of the `Checker` class.
 
-```
-  var checker = Java.use("com.ad2001.frida0x6.Checker");
-  var checker_obj  = checker.$new();  //Class object
+```javascript
+var checker = Java.use("com.ad2001.frida0x6.Checker");
+var checker_obj = checker.$new(); // Class Object
 ```
 
 Set the values of `num1` and `num2`.
 
-```
-     if (1234 == A.num1 && 4321 == A.num2) {
-        ........
-        ........
-        ........
-        }
+```java
+if (1234 == A.num1 && 4321 == A.num2) {
+    ...
+    ...
+    ...
+}
 ```
 
-```
- checker_obj.num1.value = 1234;
- checker_obj.num2.value = 4321;
+```javascript
+checker_obj.num1.value = 1234;
+checker_obj.num2.value = 4321;
 ```
 
 Now let's get the instance of `MainActivity`. For this we can use `Java.performNow` and `Java.choose` APIs. We already did this in the previous challenge.
 
 ```javascript
-Java.performNow(function(){
-Java.choose('com.ad2001.frida0x6.MainActivity', {
-  onMatch: function(instance) {
-   console.log("Instance found");
-   
+Java.performNow(function() {
+  Java.choose('com.ad2001.frida0x6.MainActivity', {
+    onMatch: function(instance) {
+      console.log("Instance found");
 
-  },
-  onComplete: function() {}
-});
+    },
+    onComplete: function() {}
+  });
 })
 ```
 
 Let's update the script with instance of the `Checker` class.
 
 ```javascript
-Java.performNow(function(){
-Java.choose('com.ad2001.frida0x6.MainActivity', {
-  onMatch: function(instance) {
-   console.log("Instance found");
-   
-  var checker = Java.use("com.ad2001.frida0x6.Checker");
-  var checker_obj  = checker.$new();  //Class object
-  checker_obj.num1.value = 1234;
-  checker_obj.num2.value = 4321;
+Java.performNow(function() {
+  Java.choose('com.ad2001.frida0x6.MainActivity', {
+    onMatch: function(instance) {
+      console.log("Instance found");
 
+      var checker = Java.use("com.ad2001.frida0x6.Checker");
+      var checker_obj  = checker.$new();  // Class Object
+      checker_obj.num1.value = 1234;
+      checker_obj.num2.value = 4321;
 
-  },
-  onComplete: function() {}
-});
+    },
+    onComplete: function() {}
+  });
 });
 ```
 
 Now the only thing left to do is to call the `get_flag` method by passing the instance of the `Checker` class.
 
 ```javascript
-Java.performNow(function(){
-Java.choose('com.ad2001.frida0x6.MainActivity', {
-  onMatch: function(instance) {
-   console.log("Instance found");
-   
-  var checker = Java.use("com.ad2001.frida0x6.Checker");
-  var checker_obj  = checker.$new();  //Class object
-  checker_obj.num1.value = 1234;  //num1
-  checker_obj.num2.value = 4321;  //num2
-  instance.get_flag(checker_obj);  //invoking the get_flag method
+Java.performNow(function() {
+  Java.choose('com.ad2001.frida0x6.MainActivity', {
+    onMatch: function(instance) {
+      console.log("Instance found");
 
-  },
-  onComplete: function() {}
-});
+      var checker = Java.use("com.ad2001.frida0x6.Checker");
+      var checker_obj  = checker.$new();  // Class Object
+      checker_obj.num1.value = 1234; // num1
+      checker_obj.num2.value = 4321; // num2
+      instance.get_flag(checker_obj); // invoking the get_flag method
+
+    },
+    onComplete: function() {}
+  });
 });
 ```
 
@@ -131,6 +129,6 @@ PS C:\Users\ajind> frida -U -f com.ad2001.frida0x6
 
 ![](images/4.png)
 
-Now if we check our phone, the textview will have the flag.
+When we check our phone, the textview will have the flag.
 
 <img src="images/5.jpg" style="zoom:5%;" />

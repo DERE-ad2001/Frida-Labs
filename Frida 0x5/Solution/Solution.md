@@ -1,4 +1,4 @@
-## Prerequisites  
+## Prerequisites
 
 - Basics of Reverse Engineering using jadx.
 - Ability to understand Java code.
@@ -19,27 +19,27 @@ Just like other challenges, there's nothing in the UI. Let's see what we can fin
 In the `MainActivity`, there is a method called `flag` that is not called anywhere in the program. This method decrypts the flag and sets it in the TextView. Additionally, note that we have to pass the value `1337` as an argument to bypass the `if` check. We encountered a similar situation in our previous post, but this time, it's within the `MainActivity`. Why not create another instance of `MainActivity` and call this method? Let's give that a try.
 
 - Package name : `com.ad2001.frida0x5`
-- Class name : `MainActivity `
-- Function name :  `flag` 
+- Class name : `MainActivity`
+- Function name : `flag`
 
 Let's review the template again.
 
-```
-Java.perform(function (){
- 
-var <class_reference>= Java.use("<package_name>.<class>");
-var <class_instance> = <class_reference>.$new(); //Class Object
-<class_instance>.<method>();   //Calling the method
+```javascript
+Java.perform(function() {
+
+  var <class_reference> = Java.use("<package_name>.<class>");
+  var <class_instance> = <class_reference>.$new(); // Class Object
+  <class_instance>.<method>(); // Calling the method
 
 })
 ```
 
-```
-Java.perform(function (){
- 
-var a= Java.use("com.ad2001.frida0x5.MainActivity");
-var main_act = a.$new(); //Class Object
-main_act.flag(1337);   //Calling the method
+```javascript
+Java.perform(function() {
+
+  var a = Java.use("com.ad2001.frida0x5.MainActivity");
+  var main_act = a.$new(); // Class Object
+  main_act.flag(1337); // Calling the method
 
 })
 ```
@@ -47,7 +47,7 @@ main_act.flag(1337);   //Calling the method
 Let's start frida.
 
 ```
-frida -U -f com.ad2001.frida0x5 
+frida -U -f com.ad2001.frida0x5
 ```
 
 ![](images/3.png)
@@ -64,27 +64,27 @@ When an Android application starts, the system creates an instance of the `MainA
 
 For invoking methods on an existing instance can be easily done by frida. For this we will be using an two APIs.
 
-- `Java.performNow` : function that is used to execute code within the context of the Java runtime. 
+- `Java.performNow` : function that is used to execute code within the context of the Java runtime.
 
-- `Java.choose`: enumerates through instances of the specified Java class (provided as the first argument) at runtime. 
+- `Java.choose`: enumerates through instances of the specified Java class (provided as the first argument) at runtime.
 
 Let me show you a template.
 
-```
-Java.performNow(function(){
-Java.choose('<Package>.<class_Name>', {
-  onMatch: function(instance) {
-    // TO DO//
-  },
-  onComplete: function() {}
-});
+```javascript
+Java.performNow(function() {
+  Java.choose('<Package>.<class_Name>', {
+    onMatch: function(instance) {
+      // TODO
+    },
+    onComplete: function() {}
+  });
 });
 ```
 
 There are two callbacks in this:
 
 - **onMatch**
-  - The `onMatch` callback function is executed for each instance of the specified class found during the `Java.choose` operation. 
+  - The `onMatch` callback function is executed for each instance of the specified class found during the `Java.choose` operation.
   - This callback function receives the current instance as its parameter.
   - You can define custom actions within the `onMatch` callback to be performed on each instance.
   - `function(instance) {}`, the `instance` parameter represents each matched instance of the target class. You can use any other name you want.
@@ -94,37 +94,37 @@ There are two callbacks in this:
 Now we know how to use the `Java.choose` API, let's start writing our frida script.
 
 - Package name : `com.ad2001.frida0x5`
-- Class name : `MainActivity `
-- Function name :  `flag` 
+- Class name : `MainActivity`
+- Function name : `flag`
 
-```
-Java.performNow(function(){
-Java.choose('com.ad2001.frida0x5.MainActivity', {
-  onMatch: function(instance) {
-    // TO DO//
-  },
-  onComplete: function() {}
-});
+```javascript
+Java.performNow(function() {
+  Java.choose('com.ad2001.frida0x5.MainActivity', {
+    onMatch: function(instance) {
+      // TODO
+    },
+    onComplete: function() {}
+  });
 });
 ```
 
 Let's include a `console.log` statement to print a message when it successfully finds an instance of `MainActivity`. We can leave the `onComplete` block empty since we don't have anything specific to do after the enumeration is complete.
 
 ```javascript
-Java.performNow(function(){
-Java.choose('com.ad2001.frida0x5.MainActivity', {
-  onMatch: function(instance) {
-   console.log("Instance found");
-  },
-  onComplete: function() {}
-});
+Java.performNow(function() {
+  Java.choose('com.ad2001.frida0x5.MainActivity', {
+    onMatch: function(instance) {
+      console.log("Instance found");
+    },
+    onComplete: function() {}
+  });
 });
 ```
 
 Let's start Frida and inject our script.
 
 ```
- frida -U -f com.ad2001.frida0x5
+frida -U -f com.ad2001.frida0x5
 ```
 
 ![](images/4.png)
@@ -135,19 +135,19 @@ Let me show the output when i run this on my physical device.
 
 ![](images/5.png)
 
-It works fine for some reason. 
+It works fine for some reason.
 
 So the instance for our `MainActivity` is found. Okay, now let's call the `flag()` method and pass the value 1337. We can simply use the `.<function_name>()` as we did in our previous post.
 
 ```javascript
-Java.performNow(function(){
-Java.choose('com.ad2001.frida0x5.MainActivity', {
-  onMatch: function(instance) {     //"instance" is the instance for the MainActivity
-   console.log("Instance found");   
-   instance.flag(1337); //Calling the function
-  },
-  onComplete: function() {}
-});
+Java.performNow(function() {
+  Java.choose('com.ad2001.frida0x5.MainActivity', {
+      onMatch: function(instance) { // "instance" is the instance for the MainActivity
+        console.log("Instance found");
+        instance.flag(1337); // Calling the function
+    },
+    onComplete: function() {}
+  });
 });
 ```
 
@@ -157,4 +157,4 @@ Let's now run the script.
 
 
 
-If we check the app again we can see the flag in the textview.
+When we check the app again, we can see the flag in the textview.

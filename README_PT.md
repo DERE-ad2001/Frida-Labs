@@ -1,7 +1,7 @@
 
 ![Frida-Labs](https://github.com/DERE-ad2001/Frida-labs/assets/67110398/e5794a19-1ee7-4820-81c7-fd362f78c842)
 
-Este repositório contém uma seria de desafios, desenhados para o aprendizado do Frida para Android. Eles não são como os desafios complexos de Capture The Flag (CTF), mas vão te ajudar a começar com Frida e suas APIs mais utilizadas. Se você é completamente novo no quesito Frida, esse repositório é perfeito para começar. Eu organizei os desafios de forma que cubra todos os pontos básicos até o nível intermediário.
+Este repositório contém uma série de desafios, desenhados para o aprendizado do Frida para Android. Eles não são como os desafios complexos de Capture The Flag (CTF), mas vão te ajudar a começar com Frida e suas APIs mais utilizadas. Se você é completamente novo no quesito Frida, esse repositório é perfeito para começar. Eu organizei os desafios de forma que cubra todos os pontos básicos até o nível intermediário.
 
 Esses desafios também possuem flags, mas capturar a flag não é o primeiro objetivo aqui, você pode facilmente conseguir essas flags utilizando outros métodos. O objetivo desses desafios é te capacitar com os fundamentos, te ajudando a usar Frida e entender os scripts Frida escritos por outras pessoas. Enquanto estiver fazendo esses desafios, tente obter a mesma flag através de modos diferentes. Estarei atualizando o repositório com novos desafios sempre que encontrar algo interessante.
 

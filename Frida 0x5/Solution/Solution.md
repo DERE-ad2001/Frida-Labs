@@ -153,7 +153,7 @@ Java.performNow(function() {
 
 Let's now run the script.
 
-<img src="images/6.png" style="zoom:5%;" />
+<img src="images/6.png" />
 
 
 

@@ -48,7 +48,7 @@ Java.perform(function() {
 })
 ```
 
-This is the template that we can use to call a static method. We can just use the `<class_reference>.<method>`.
+This is the template that we can use to call a static method. We can just use the `<class_reference>.<method>` to invoke the method.
 
 ```javascript
 

@@ -97,7 +97,7 @@ Navigate to the left dropdown list `functions`.
 
 ![](images/10.png)
 
-We can see our `cmpstr` compilation. Don't get confused about the name `Java_com_ad2001_frida0xa_MainActivity_stringFromJNI()` it's just appended with the package name . In Java, when you declare a native method, you use the `native` keyword to indicate that the method's implementation is provided in another language, typically C or C++. The declaration of the native method in the Java class doesn't include the implementation. it just acts as a signature that tells the Java runtime that the method will be implemented in a native language. The convention for the method name includes the package name and the class name.
+We can see our `cmpstr` compilation. Don't get confused about the name `Java_com_ad2001_frida0xa_MainActivity_cmpstr()` it's just appended with the package name . In Java, when you declare a native method, you use the `native` keyword to indicate that the method's implementation is provided in another language, typically C or C++. The declaration of the native method in the Java class doesn't include the implementation. it just acts as a signature that tells the Java runtime that the method will be implemented in a native language. The convention for the method name includes the package name and the class name.
 
 Double-clicking on it will give the disassembly and decompilation of the function.
 

@@ -133,22 +133,22 @@ Let's start by finding the address of the `JNZ` instruction we want to patch.
 
 ![](images/15.png)
 
-We can find the offset by subtracting `0x20e2a` with the base `0x00010000`. Now to get the actual actress we can use add this offset with the base address.
+We can find the offset by subtracting `0x20e2a` with the base `0x00010000`. Now to get the actual address we can use add this offset with the base address.
 
 ```
-[Android Emulator 5554::com.ad2001.frida0xb ]-> Module.getBaseAddress("libfrida0xb.so")
+[Android Emulator 5554::com.ad2001.frida0xb ]-> Process.getModuleByName("libfrida0xb.so").base
 "0xc2083000"
 ```
 
 ```
-[Android Emulator 5554::com.ad2001.frida0xb ]-> Module.getBaseAddress("libfrida0xb.so").add(0x20e2a - 0x00010000)
+[Android Emulator 5554::com.ad2001.frida0xb ]-> Process.getModuleByName("libfrida0xb.so").base.add(0x20e2a - 0x00010000)
 "0xc2093e2a"
 ```
 
 Let's write our script.
 
 ```javascript
-var jnz = Module.getBaseAddress("libfrida0xb.so").add(0x20e2a - 0x00010000);
+var jnz = Process.getModuleByName("libfrida0xb.so").base.add(0x20e2a - 0x00010000);
 var writer = new X86Writer(jnz);
 
 try {
@@ -161,7 +161,7 @@ try {
 }
 ```
 
-Now we need to place the `NOP` instruction in the place of  the `JNZ` instruction. To place a `NOP` instruction we can use the method `PutNop()`
+Now we need to place the `NOP` instruction in the place of  the `JNZ` instruction. To place a `NOP` instruction we can use the method `putNop()`
 
 ![](images/16.png)
 
@@ -183,7 +183,8 @@ The size of  a `NOP` instruction in a typical `x86` architecture is 1 byte. But 
 Subtracting `0x00020e2a` from `0x00020e30` gives us 6. In conclusion, we have to place six `NOP` instructions in the place of `JNZ` because when patching instructions with other instructions, we must  ensure that the size of the new instruction accounts for the size of the instruction that is being replaced. So let's update the script.
 
 ```javascript
-var jnz = Module.getBaseAddress("libfrida0xb.so").add(0x20e2a - 0x00010000);
+var jnz = Process.getModuleByName("libfrida0xb.so").base.add(0x20e2a - 0x00010000);
+Memory.protect(jnz, 0x1000, "rwx");
 var writer = new X86Writer(jnz);
 
 try {
@@ -203,7 +204,7 @@ try {
 }
 ```
 
-Let's try this script now.
+Now let's run the script.
 
 ```
 PS C:\Users\ajind> frida -U -f com.ad2001.frida0xb
@@ -236,7 +237,7 @@ Memory.protect(jnz, 0x1000, "rwx");
 Let's update the script for the final time.
 
 ```javascript
-var jnz = Module.getBaseAddress("libfrida0xb.so").add(0x20e2a - 0x00010000);
+var jnz = Process.getModuleByName("libfrida0xb.so").base.add(0x20e2a - 0x00010000);
 Memory.protect(jnz, 0x1000, "rwx");
 var writer = new X86Writer(jnz);
 
@@ -299,6 +300,7 @@ Let's replace the `b.ne` with a `b` instruction. This will branch to the specifi
 
 
 
+
 Let's use the documentation and see which method provides this instruction.
 
 https://frida.re/docs/javascript-api/#arm64writer
@@ -307,15 +309,17 @@ https://frida.re/docs/javascript-api/#arm64writer
 
 
 
+
+
 Now we need to repeat the process we did above to find the address of the `b.ne` instruction and also the address of the next instruction so that we can pass this address to the `putBImm(address)` function. You can use ghidra to find the offset. I won't be explaining that again.
 
-So after obtaining the offset, you can find the base address by using `Module.findBaseAddress("libfrida0xb.so")` and add the offset to get the actual address of the instruction. Let's write the final script.
+So after obtaining the offset, you can find the base address by using `Process.getModuleByName("libfrida0xb.so").base` and add the offset to get the actual address of the instruction. Let's write the final script.
 
 ```javascript
-var adr = Module.findBaseAddress("libfrida0xb.so").add(0x15248);  // Addres of the b.ne instruction
+var adr = Process.getModuleByName("libfrida0xb.so").base.add(0x15248);  // Addres of the b.ne instruction
 Memory.protect(adr, 0x1000, "rwx");
 var writer = new Arm64Writer(adr);  // ARM64 writer object
-var target = Module.findBaseAddress("libfrida0xb.so").add(0x1524c);  // Address of the next instruction  b  LAB_00115250
+var target = Process.getModuleByName("libfrida0xb.so").base.add(0x1524c);  // Address of the next instruction  b  LAB_00115250
 
 try {
 
@@ -333,7 +337,9 @@ try {
 
 In ARM64, you don't have to worry about the alignment of the instructions as all the instructions are 4 bytes aligned.
 
-### Frida >= 17 workaround
+### Frida 17+ Recommended Approach (Memory.patchCode)
+
+In Frida 17+, the recommended way to patch code is to use `Memory.patchCode()` instead of `Memory.protect()` + `X86Writer`/`Arm64Writer`. This API handles memory protection changes automatically and is more reliable.
 
 ```javascript
 Process.attachModuleObserver({
@@ -347,6 +353,29 @@ Process.attachModuleObserver({
                 cw.putNop();
                 cw.flush();
                 console.log(`Instruction at ${targetAddress} successfully patched with NOP!`);
+            });
+        }
+    },
+    onRemoved: function(module) {}
+});
+```
+
+For x86, the equivalent would be:
+
+```javascript
+Process.attachModuleObserver({
+    onAdded: function(module) {
+        if (module.name === "libfrida0xb.so") {
+            console.log(`Found libfrida0xb.so at: ${module.base}`);
+            const targetAddress = module.base.add(0x10e2a); // x86 offset
+
+            Memory.patchCode(targetAddress, 6, (code) => {
+                const cw = new X86Writer(code, { pc: targetAddress });
+                for (let i = 0; i < 6; i++) {
+                    cw.putNop();
+                }
+                cw.flush();
+                console.log(`Instruction at ${targetAddress} successfully patched with 6 NOPs!`);
             });
         }
     },

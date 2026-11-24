@@ -62,10 +62,9 @@ When an Android application starts, the system creates an instance of the `MainA
 
 ## Invoking methods on an existing instance
 
-For invoking methods on an existing instance can be easily done by frida. For this we will be using an two APIs.
+For invoking methods on an existing instance can be easily done by frida. For this we will be using two APIs.
 
 - `Java.performNow` : function that is used to execute code within the context of the Java runtime.
-
 - `Java.choose`: enumerates through instances of the specified Java class (provided as the first argument) at runtime.
 
 Let me show you a template.
@@ -154,7 +153,6 @@ Java.performNow(function() {
 Let's now run the script.
 
 <img src="images/6.png" />
-
 
 
 When we check the app again, we can see the flag in the textview.

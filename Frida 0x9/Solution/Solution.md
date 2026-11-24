@@ -21,7 +21,7 @@ Okay, let's try using jadx.
 
 ![](Images/3.png)
 
-At the start of the app, we come across the declaration of the native function. The `check_flag` function is defined in the `a0x9` library. This function takes no arguments and returns an integer. When the button is clicked, the return value from the `check_flag` method is compared with 1337. If they match, it decrypts the flag and displays it. Otherwise, it prints 'Try again'. So to get the flag, we should make the `check_flag` method return 1337.
+At the start of the app, we come across the declaration of the native function. The `check_flag` function is defined in the `a0x9` library. This function takes no arguments and returns an integer. When the button is clicked, the return value from the `check_flag` method is compared with 1337. If they match, it decrypts the flag and displays it. Otherwise, it prints 'Try again'. So to get the flag, we should make the `check_flag` method return `1337`.
 
 So why are we wasting time here? Let's decompile the app and analyze the `a0x9` library.
 
@@ -51,12 +51,12 @@ Interceptor.attach(targetAddress, {
 
 ```
 
-First we need the address for `check_flag` method. For this, we can use the ` Module.enumerateExports` API.
+First we need the address for `check_flag` method. For this, we can use the `Process.getModuleByName().enumerateExports()` API.
 
 ![](Images/7.png)
 
 ```javascript
-var check_flag = Module.enumerateExports("liba0x9.so")[0]['address']
+var check_flag = Process.getModuleByName("liba0x9.so").enumerateExports()[0]['address']
 Interceptor.attach(check_flag, {
     onEnter: function (args) {
 
@@ -65,15 +65,14 @@ Interceptor.attach(check_flag, {
 
     }
 });
-
 ```
 
-Now the only thing left to do is to change the return value.  We can leave the `onEnter` block empty and use the `onLeave` block to change the return value. The `retval` contains the original return value. We can change this using `retval.repalce()`.
+Now the only thing left to do is to change the return value.  We can leave the `onEnter` block empty and use the `onLeave` block to change the return value. The `retval` contains the original return value. We can change this using `retval.replace()`.
 
 Let's do that.
 
 ```javascript
-var check_flag = Module.enumerateExports("liba0x9.so")[0]['address']
+var check_flag = Process.getModuleByName("liba0x9.so").enumerateExports()[0]['address']
 Interceptor.attach(check_flag, {
     onEnter: function () {
 
@@ -84,20 +83,23 @@ Interceptor.attach(check_flag, {
     }
 });
 ```
-### Frida >= 17 workaround
+
+### Frida 17+ Recommended Approach (Process.attachModuleObserver)
+
+In Frida 17+, the recommended way to hook functions in libraries that may not be loaded yet is to use `Process.attachModuleObserver()`. This ensures the hook is installed as soon as the module is loaded, before any code in it can execute.
 
 ```javascript
 Process.attachModuleObserver({
     onAdded: function(module) {
         if (module.name === "liba0x9.so") {
-            var checkFlagAddr = module.getExportByName("Java_com_ad2001_a0x9_MainActivity_check_1flag");
+            var checkFlagAddr = module.findExportByName("Java_com_ad2001_a0x9_MainActivity_check_1flag");
             if (checkFlagAddr) {
                 Interceptor.attach(checkFlagAddr, {
                     onEnter: function(args) {
                         console.log(" check_flag is being called!");
                     },
                     onLeave: function(returnValue) {
-                        returnValue.replace(1337); 
+                        returnValue.replace(1337);
                     }
                 });
             }

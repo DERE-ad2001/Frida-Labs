@@ -59,7 +59,7 @@ After downloading it, extract it and push it into a writable directory.
 `/data/local/tmp` typically has no problems, so I will push the server there.
 
 ```
-adb push frida-server-16.1.4-android-x86 /data/local/tmp
+adb push frida-server-17.x.x-android-x86 /data/local/tmp
 ```
 
 ![](images/5.png)
@@ -72,15 +72,14 @@ generic_x86:/ # cd /data/local
 local.prop  local/
 generic_x86:/ # cd /data/local/tmp/
 generic_x86:/data/local/tmp # ls
-frida-server-16.0.19-android-x86  frida-server-16.1.4-android-x86  lldb-server  perfd  start_lldb_server.sh
+frida-server-17.x.x-android-x86  lldb-server  perfd  start_lldb_server.sh
 generic_x86:/data/local/tmp #
-
 ```
 
 Let's grant executable permission to the `frida-server` binary.
 
 ```
-generic_x86:/data/local/tmp # chmod +x frida-server-16.1.4-android-x86
+generic_x86:/data/local/tmp # chmod +x frida-server-17.x.x-android-x86
 ```
 
 Now let's run the server.
@@ -153,11 +152,9 @@ Before attaching the application to Frida, let's take a moment to  understand th
 ![](images/11.png)
 
 
-
 The application asks us to enter a number. Let's enter a number and see.
 
 ![](images/12.png)
-
 
 
 It says `Try again`.  So let's try to decompile the application using jadx.
@@ -229,7 +226,7 @@ Java.perform(function() {
 })
 ```
 
-
+> **Note for Frida 17+:** In Frida 17, the Java bridge may need to be explicitly loaded in some contexts. If you encounter `Java is not defined`, add `const Java = require('frida-java-bridge');` at the top of your script.
 
 - `Java.perform` is a function in Frida used to create a special context for your script to interact with Java code in Android  applications. It's like opening a door to access and manipulate the Java code running inside the app. Once inside this context, you can perform actions like hooking methods or accessing Java classes to control or observe the app's behavior.
 

@@ -1,5 +1,3 @@
-
-
 ## Prerequisites
 
 - Basics of Reverse Engineering using jadx.
@@ -46,6 +44,7 @@ Java.perform(function() {
     <class_reference>.<static_method>();
 
 })
+
 ```
 
 This is the template that we can use to call a static method. We can just use the `<class_reference>.<method>` to invoke the method.
@@ -86,4 +85,3 @@ Pressing enter will run the script. Now let's check our device.
 
 
 BOOM !!  We got our flag. So this is how you can call static methods in frida.
-

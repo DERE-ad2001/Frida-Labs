@@ -101,7 +101,7 @@ PS C:\Users\ajind> frida -U -f com.ad2001.frida0xa
 ```
 
 ```
-[Android Emulator 5554::com.ad2001.frida0xa ]-> Module.getBaseAddress("libfrida0xa.so")
+[Android Emulator 5554::com.ad2001.frida0xa ]-> Process.getModuleByName("libfrida0xa.so").base
 "0xc1859000"
 ```
 
@@ -116,7 +116,7 @@ We can get the offset by substracting this address from the image base. By defau
 So the offset = `0x00028bb0` - `0x00010000` = `0x18BB0`. Now we can add that to the base.
 
 ```
-[Android Emulator 5554::com.ad2001.frida0xa ]-> Module.getBaseAddress("libfrida0xa.so") .add(0x18BB0)
+[Android Emulator 5554::com.ad2001.frida0xa ]-> Process.getModuleByName("libfrida0xa.so").base.add(0x18BB0)
 "0xc1871bb0"
 [Android Emulator 5554::com.ad2001.frida0xa ]->
 ```
@@ -124,20 +124,20 @@ So the offset = `0x00028bb0` - `0x00010000` = `0x18BB0`. Now we can add that to 
 Okay, now we got the address.
 
 ```javascript
-var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0)
+var adr = Process.getModuleByName("libfrida0xa.so").base.add(0x18BB0)
 ```
 
 Next let's create the NativePointer object.
 
 ```javascript
-var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0) // Address of the get_flag() function
+var adr = Process.getModuleByName("libfrida0xa.so").base.add(0x18BB0) // Address of the get_flag() function
 var get_flag_ptr = new NativePointer(adr);
 ```
 
 Now let's create the `NativeFunction` object. The first argument is `get_flag_ptr`. The second argument is the data type; here, `get_flag` is a void function, so we will pass `void`. Lastly, the `get_flag` function has two arguments, both of which are integers, so we will pass `['int', 'int']` as the third argument.
 
 ```javascript
-var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0) // Address of the get_flag() function
+var adr = Process.getModuleByName("libfrida0xa.so").base.add(0x18BB0) // Address of the get_flag() function
 var get_flag_ptr = new NativePointer(adr);
 const get_flag = new NativeFunction(get_flag_ptr, 'void', ['int', 'int']);
 ```
@@ -161,25 +161,28 @@ if (param_1 + param_2 == 3) {
 We need the sum of our arguments to equal `3` to pass the `if` check. So, we can pass `1` and `2` as the arguments and call the method. So the final script will look like.
 
 ```javascript
-var adr = Module.findBaseAddress("libfrida0xa.so").add(0x18BB0) // Address of the get_flag() function
+var adr = Process.getModuleByName("libfrida0xa.so").base.add(0x18BB0) // Address of the get_flag() function
 var get_flag_ptr = new NativePointer(adr);
 const get_flag = new NativeFunction(get_flag_ptr, 'void', ['int', 'int']);
 get_flag(1,2);
 ```
-### Frida >= 17 workaround
+
+### Frida 17+ Recommended Approach (Process.attachModuleObserver)
+
+In Frida 17+, the recommended way to call native functions in libraries that may not be loaded yet is to use `Process.attachModuleObserver()`. This ensures the function is called as soon as the module is loaded.
 
 ```javascript
 Process.attachModuleObserver({
     onAdded: function(module) {
         if (module.name === "libfrida0xa.so") {
             console.log("libfrida0xa.so found at: " + module.base);
-            var offset = 0x1dd60; 
+            var offset = 0x1dd60;
             var getFlagAddr = module.base.add(offset);
 
             if (getFlagAddr) {
                 console.log("Success! Function address: " + getFlagAddr);
                 var get_flag = new NativeFunction(getFlagAddr, 'void', ['int', 'int']);
-                get_flag(1, 2);                
+                get_flag(1, 2);
                 console.log("Done. Check Logcat for the 'Decrypted Flag' message.");
             } else {
                 console.log("Failed to locate the function.");
@@ -189,6 +192,7 @@ Process.attachModuleObserver({
     onRemoved: function(module) {}
 });
 ```
+
 Let's run frida and try this script.
 
 ![](images/14.png)

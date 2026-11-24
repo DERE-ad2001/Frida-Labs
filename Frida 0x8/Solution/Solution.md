@@ -199,7 +199,6 @@ Interceptor.attach(targetAddress, {
         // Modify or log return value if needed
     }
 });
-
 ```
 
 - `Interceptor.attach`: Attaches a callback to the specified function address. The `targetAddress` should be address of the native function we want to hook.
@@ -208,11 +207,12 @@ Interceptor.attach(targetAddress, {
 
 Now the next question is how to get the address of a particular function in frida, there are plenty of ways to do that.  Let me show you some API's to do this.
 
-- Using the frida API : `Module.enumerateExports()`
-- Using the frida API :  `Module.getExportByName()`
-- Using the frida API : `Module.findExportByName()`
-- Calculate the offset and `add()` it to the  `Module.getBaseAddress()` address
-- Using the frida API : `Module.enumerateImports()`
+- Using the frida API : `Process.getModuleByName().findExportByName()`
+- Using the frida API :  `Process.getModuleByName().getExportByName()`
+- Calculate the offset and `add()` it to the  `Process.getModuleByName().base` address
+- Using the frida API : `Process.getModuleByName().enumerateImports()`
+
+> **Frida 17+ API Changes:** The static `Module.*` APIs (`Module.getBaseAddress()`, `Module.findExportByName()`, `Module.enumerateExports()`, etc.) have been removed in Frida 17. Use `Process.getModuleByName()` to get a module instance, then call instance methods on it.
 
 So before that what are these exports and imports ?
 
@@ -222,7 +222,7 @@ Let's see these API's one by one. Run frida and attach to our application.
 
 ![](images/12.png)
 
-#### Module.enumerateExports()
+#### Process.getModuleByName().enumerateExports()
 
 This API enumerates all exports (symbols) from a specified module. The exported functions are used by our application in the Java space. It takes one argument, which is the name of the module (shared library or executable) for which you want to enumerate exports.
 
@@ -240,23 +240,23 @@ We observe the address, name, and type. Now, let's attempt to obtain the address
 
 So the address is `0xc20cd720`. You shouldn't hardcode this address since it changes every time the application starts, as ASLR is enabled by default in Android.
 
-#### Module.getExportByName()
+#### Process.getModuleByName().getExportByName()
 
-The `Module.getExportByName(modulename, exportName)` function retrieves the address of the exported symbol with the given name from the module (shared library). If you don't know in which library your exported symbol is located, you can pass `null`. Let's use this to find the address of `cmpstr` again.
+The `Process.getModuleByName(modulename).getExportByName(exportName)` function retrieves the address of the exported symbol with the given name from the module (shared library). Let's use this to find the address of `cmpstr` again.
 
 ![](images/15.png)
 
 As we can see the addresses are same from the both APIs.
 
-####  Module.findExportByName()
+#### Process.getModuleByName().findExportByName()
 
-It's the same as `Module.getExportByName()`. The only difference is that `Module.getExportByName()` raises an exception if the export is not found, while `Module.findExportByName()` returns `null` if the export is not found. Let's see an example.
+It's the same as `getExportByName()`. The only difference is that `getExportByName()` raises an exception if the export is not found, while `findExportByName()` returns `null` if the export is not found. Let's see an example.
 
 ![](images/16.png)
 
-#### Module.getBaseAddress()
+#### Process.getModuleByName().base
 
-Sometimes if the above API's don't work we can rely on the `Module.getBaseAddress()` , This API returns the base address of the given module. Let's find the base address of the `libfrida0x8.so` library.
+Sometimes if the above API's don't work we can rely on the `Process.getModuleByName().base` , This API returns the base address of the given module. Let's find the base address of the `libfrida0x8.so` library.
 
 ![](images/18.png)
 
@@ -270,16 +270,16 @@ Adding `0x720` to   `0xc2022000` gives us `0xC2022720`.
 
 ![](images/20.png)
 
-#### Module.enumerateImports()
+#### Process.getModuleByName().enumerateImports()
 
-Similar to `Module.enumerateExports()` we have the `Module.enumerateImports()`that will give us the imports of a module. Let's try this to get all the imports from `libfrida0x8.so`.
+Similar to `enumerateExports()` we have the `enumerateImports()`that will give us the imports of a module. Let's try this to get all the imports from `libfrida0x8.so`.
 
 ![](images/21.png)
 
 We see our `strcmp` function in the results. Let's get its address.
 
 ```
-[Android Emulator 5554::com.ad2001.frida0x8 ]-> Module.enumerateImports("libfrida0x8.so")[4]['address']
+[Android Emulator 5554::com.ad2001.frida0x8 ]-> Process.getModuleByName("libfrida0x8.so").enumerateImports()[4]['address']
 "0xf0684840"
 ```
 
@@ -305,17 +305,17 @@ Interceptor.attach(targetAddress, {
 
 ```
 
-First, let's find the address for `strcmp`. You can use any of the APIs I mentioned above. I will be using `Module.findExportByName()`.  We know the c functions like `strcmp` are in the `libc.so` library and is exported.
+First, let's find the address for `strcmp`. You can use any of the APIs I mentioned above. I will be using `Process.getModuleByName().findExportByName()`.  We know the c functions like `strcmp` are in the `libc.so` library and is exported.
 
 ```
-[Android Emulator 5554::com.ad2001.frida0x8 ]-> Module.findExportByName("libc.so", "strcmp");
+[Android Emulator 5554::com.ad2001.frida0x8 ]-> Process.getModuleByName("libc.so").findExportByName("strcmp");
 "0xf0684840"
 ```
 
 Now let's store that in a variable and edit the target address.
 
 ```javascript
-var strcmp_adr =  Module.findExportByName("libc.so", "strcmp");
+var strcmp_adr =  Process.getModuleByName("libc.so").findExportByName("strcmp");
 Interceptor.attach(strcmp_adr, {
     onEnter: function (args) {
         // Modify or log arguments if needed
@@ -329,7 +329,7 @@ Interceptor.attach(strcmp_adr, {
 Now let's add a `console.log` to see if this is working properly.
 
 ```javascript
-var strcmp_adr =  Module.findExportByName("libc.so", "strcmp");
+var strcmp_adr =  Process.getModuleByName("libc.so").findExportByName("strcmp");
 Interceptor.attach(strcmp_adr, {
     onEnter: function (args) {
 
@@ -354,13 +354,13 @@ It worked, but it's printing the log message many times.
 
 This is happening because we have hooked into every `strcmp` in the application, and we don't want this.  Let's fix this. We know that in `strcmp`, one string will be our input, right? So, we can provide a specific string and use it as a filter to apply the hook. However, we still don't know whether our input is the first or the second argument. Looking at the decompilation in ghidra gives a hint that it's the first argument, or we could find it through trial and error. So let's try to filter using the first argument.
 
-For reading a string from the memory using frida. We can use `Memory.readUtf8String()` API. It reads a `utf` string from the memory using the provided address. The `args` is an array of pointers that contains the arguments for the `strcmp` function. So to access the first argument we can use `arg[0]`.
+For reading a string from the memory using frida. We can use `args[0].readCString()` API. It reads a `utf` string from the memory using the provided address. The `args` is an array of pointers that contains the arguments for the `strcmp` function. So to access the first argument we can use `arg[0]`.
 
 ```javascript
-var strcmp_adr = Module.findExportByName("libc.so", "strcmp");
+var strcmp_adr = Process.getModuleByName("libc.so").findExportByName("strcmp");
 Interceptor.attach(strcmp_adr, {
     onEnter: function (args) {
-        var arg0 = Memory.readUtf8String(args[0]);
+        var arg0 = args[0].readCString();
     },
     onLeave: function (retval) {
         // Modify or log return value if needed
@@ -369,16 +369,16 @@ Interceptor.attach(strcmp_adr, {
 
 ```
 
-Now let's add an `if` condition and the `include` function to filter our `strcmp`.
+Now let's add an `if` condition and the `includes` function to filter our `strcmp`.
 
 ```javascript
-var strcmp_adr = Module.findExportByName("libc.so", "strcmp");
+var strcmp_adr = Process.getModuleByName("libc.so").findExportByName("strcmp");
 Interceptor.attach(strcmp_adr, {
     onEnter: function (args) {
-        var arg0 = Memory.readUtf8String(args[0]);
+        var arg0 = args[0].readCString();
         if (arg0.includes("Hello")) {
 
-            console.log("Hookin the strcmp function");
+            console.log("Hooking the strcmp function");
 
         }
     },
@@ -402,14 +402,14 @@ As we can see, now it's printing only one log message.
 Now, the only thing left to do is to print the second argument. The  second argument is our flag, which is compared with our input. Let's update the script.
 
 ```javascript
-var strcmp_adr = Module.findExportByName("libc.so", "strcmp");
+var strcmp_adr = Process.getModuleByName("libc.so").findExportByName("strcmp");
 Interceptor.attach(strcmp_adr, {
     onEnter: function (args) {
-        var arg0 = Memory.readUtf8String(args[0]); // first argument
-        var flag = Memory.readUtf8String(args[1]); // second argument
+        var arg0 = args[0].readCString(); // first argument
+        var flag = args[1].readCString(); // second argument
         if (arg0.includes("Hello")) {
 
-            console.log("Hookin the strcmp function");
+            console.log("Hooking the strcmp function");
             console.log("Input " + arg0);
             console.log("The flag is "+ flag);
 
@@ -422,14 +422,15 @@ Interceptor.attach(strcmp_adr, {
 
 ```
 
-### Frida >= 17 workaround
+### Frida 17+ Recommended Approach (Process.attachModuleObserver)
 
+In Frida 17+, the recommended way to hook functions in libraries that may not be loaded yet is to use `Process.attachModuleObserver()`. This ensures the hook is installed as soon as the module is loaded, before any code in it can execute.
 
 ```javascript
 Process.attachModuleObserver({
     onAdded: function (module) {
         if (module.name === "libfrida0x8.so") {
-            var strcmp_adr = module.getExportByName("strcmp");
+            var strcmp_adr = module.findExportByName("strcmp");
             Interceptor.attach(strcmp_adr, {
                 onEnter: function (args) {
                     if (args[0].isNull() || args[1].isNull()) return;
@@ -445,6 +446,7 @@ Process.attachModuleObserver({
     onRemoved: function (module) {}
 });
 ```
+
 Let's run it.
 
 ![](images/27.png)
@@ -454,6 +456,7 @@ Woah we got the flag.
 Let's input this in our app and see.
 
 ![](images/28.png)
+
 
 
 

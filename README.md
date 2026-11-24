@@ -1,3 +1,4 @@
+# Frida-Labs
 
 ![Frida-Labs](https://github.com/DERE-ad2001/Frida-labs/assets/67110398/e5794a19-1ee7-4820-81c7-fd362f78c842)
 
@@ -9,7 +10,13 @@ All the APKs are inside the directories, and the solutions are also provided in 
 
 If you find this series useful please share :)
 
-# Challenges Overview
+## Maintainers
+
+- **AD2001** - Original author
+- **FlyPhantomFly** - Frida 17+ API updates and maintenance
+
+## Challenges Overview
+
 - Challenge 0x1 : Frida setup, Hooking a method
 - Challenge 0x2 : Calling a static method
 - Challenge 0x3 : Changing the value of a variable
@@ -22,7 +29,33 @@ If you find this series useful please share :)
 - Challenge 0xA : Calling a native function
 - Challenge 0xB : Patching instructions using X86Writer and ARM64Writer
 
-# Further resources
+## Recent Updates (November 2026)
+
+### Frida 17+ API Migration
+All solutions have been updated to use the **Frida 17+ JavaScript API** (released May 2025, current version 17.25.2). Key breaking changes addressed:
+
+| Old API (Frida ≤16) | New API (Frida 17+) |
+|---------------------|---------------------|
+| `Module.getBaseAddress("lib.so")` | `Process.getModuleByName("lib.so").base` |
+| `Module.findBaseAddress("lib.so")` | `Process.findModuleByName("lib.so")?.base` |
+| `Module.findExportByName("lib.so", "func")` | `Process.getModuleByName("lib.so").findExportByName("func")` |
+| `Module.getExportByName("lib.so", "func")` | `Process.getModuleByName("lib.so").getExportByName("func")` |
+| `Module.enumerateExports("lib.so")` | `Process.getModuleByName("lib.so").enumerateExports()` |
+| `Memory.readU32(ptr)` | `ptr.readU32()` |
+| `Memory.writeU32(ptr, val)` | `ptr.writeU32(val)` |
+| `Process.enumerateModules({onMatch, onComplete})` | `Process.enumerateModules()` (returns array) |
+
+### New Patterns Introduced
+- **Module Observation**: Use `Process.attachModuleObserver()` instead of polling/timers to wait for library loads
+- **Code Patching**: Use `Memory.patchCode()` instead of `Memory.protect()` + `X86Writer`/`Arm64Writer` — handles memory protection automatically
+- **NativePointer Methods**: Use instance methods like `args[0].readCString()` instead of static `Memory.readUtf8String(args[0])`
+- **Java Bridge**: In some contexts, explicitly load with `const Java = require('frida-java-bridge')`
+
+Each solution now includes both the classic approach (for learning) and the **Frida 17+ recommended approach** using modern APIs.
+
+## Further Resources
 
 - https://learnfrida.info/advanced_usage/
 - https://codeshare.frida.re/
+- https://frida.re/docs/javascript-api/ (Frida 17+ API reference)
+- https://frida.re/news/2025/05/17/frida-17-0-0-released/ (Frida 17 release notes)

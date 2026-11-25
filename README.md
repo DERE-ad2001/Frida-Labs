@@ -10,6 +10,8 @@ All the APKs are inside the directories, and the solutions are also provided in 
 
 If you find this series useful please share :)
 
+Portuguese version: https://github.com/n3k00n3/Frida-Labs-PT
+
 ## Challenges Overview
 
 - Challenge 0x1 : Frida setup, Hooking a method

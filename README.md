@@ -10,11 +10,6 @@ All the APKs are inside the directories, and the solutions are also provided in 
 
 If you find this series useful please share :)
 
-## Maintainers
-
-- **AD2001** - Original author
-- **FlyPhantomFly** - Frida 17+ API updates and maintenance
-
 ## Challenges Overview
 
 - Challenge 0x1 : Frida setup, Hooking a method
